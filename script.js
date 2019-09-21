@@ -106,7 +106,7 @@ function scanNode(id, coordinate) {
     thru.contains(node.range.y, coordinate[1])
   ) {
     // coordinate is in range!
-    // give kids a chance to intercept
+    // give kids a chance to intercept but fall back to this id:
     return node.children.reduce((p, c) => {
       return scanNode(c, coordinate) || p
     }, id)
@@ -134,30 +134,42 @@ function scrollHandler(e) {
 let dragTarget = null
 let dragStart = null
 function downHandler(e) {
-  dragStart = [pxToX(e.clientX), pxToY(e.clientY)]
-  const targetNode = scanNode(rootId, dragStart)
+  dragStart = [e.clientX, e.clientY]
+  const coordinate = [pxToX(dragStart[0]), pxToY(dragStart[1])]
+  const targetNode = scanNode(rootId, coordinate)
+  canvas.addEventListener('mousemove', moveHandler)
+  canvas.addEventListener('mouseup', clear)
+  document.addEventListener('blur', clear)
   if (targetNode !== undefined) {
     dragTarget = {
       type: 'node',
       id: targetNode,
       originalRange: { ...nodes.get(targetNode).range },
     }
-    canvas.addEventListener('mousemove', moveHandler)
-    canvas.addEventListener('mouseup', clear)
-    document.addEventListener('blur', clear)
   } else {
-    // put this back and just do nothing
-    dragStart = null
+    dragTarget = {
+      type: 'pan',
+      originalViewport: [[...viewport[0]], [...viewport[1]]],
+    }
   }
 }
 function moveHandler(e) {
-  const node = nodes.get(dragTarget.id)
-  const dragEnd = [pxToX(e.clientX), pxToY(e.clientY)]
+  const dragEnd = [e.clientX, e.clientY]
   const change = thru.sub(dragEnd, dragStart)
-  node.range.x = thru.add(dragTarget.originalRange.x, [change[0], change[0]])
-  node.range.y = thru.add(dragTarget.originalRange.y, [change[1], change[1]])
-  update(...viewport)
-  // console.log('movin', dragTarget)s
+  const xChange = pxToX(change[0]) - pxToX(0)
+  const yChange = pxToY(change[1]) - pxToY(0)
+  if (dragTarget.type === 'node') {
+    const node = nodes.get(dragTarget.id)
+    node.range.x = thru.add(dragTarget.originalRange.x, [xChange, xChange])
+    node.range.y = thru.add(dragTarget.originalRange.y, [yChange, yChange])
+    update(...viewport)
+  } else if (dragTarget.type === 'pan') {
+    viewport = [
+      thru.sub(dragTarget.originalViewport[0], [xChange, xChange]),
+      thru.sub(dragTarget.originalViewport[1], [yChange, yChange]),
+    ]
+    update(...viewport)
+  }
 }
 function clear(e) {
   canvas.removeEventListener('mousemove', moveHandler)
@@ -171,6 +183,8 @@ update(...viewport)
 
 canvas.addEventListener('mousewheel', scrollHandler)
 canvas.addEventListener('pointerdown', downHandler)
+
+const deepCopy = obj => JSON.parse(JSON.stringify(obj))
 
 // const { loop, xToPx, yToPx, xPxRange, yPxRange } = tools
 // ctx.fillStyle = `hsla(${hue}, 70%, 50%, 0.9)`
