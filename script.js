@@ -1,5 +1,9 @@
 import { virtualRender, thru } from './node_modules/v-can/index.js'
-
+WebFont.load({
+  google: {
+    families: ['Droid Sans', 'Droid Serif', 'Rajdhani:600'],
+  },
+})
 let canvas = document.getElementById('viewport')
 canvas.width = canvas.scrollWidth
 canvas.height = canvas.scrollHeight
@@ -26,6 +30,15 @@ const update = virtualRender({
           thru.duration(nodeYRange),
         )
 
+        ctx.font = '50px Rajdhani'
+        ctx.textBaseline = 'bottom'
+        ctx.fillText(
+          node.name || '',
+          nodeXRange[0],
+          nodeYRange[0],
+          thru.duration(nodeXRange),
+        )
+
         node.children.forEach(drawNode)
       }
     }
@@ -41,6 +54,7 @@ let nodeCount = 4
 let nodes = new Map()
 
 nodes.set(0, {
+  name: 'root',
   hue: 50,
   saturation: 80,
   range: {
@@ -51,6 +65,7 @@ nodes.set(0, {
   children: [1],
 })
 nodes.set(1, {
+  name: 'yellow',
   hue: 100,
   saturation: 60,
   range: {
@@ -60,6 +75,7 @@ nodes.set(1, {
   parent: 0,
   children: [2, 3],
 })
+
 nodes.set(2, {
   hue: 200,
   saturation: 20,
@@ -71,7 +87,8 @@ nodes.set(2, {
   children: [],
 })
 nodes.set(3, {
-  hue: 320,
+  hue: 280,
+  name: 'purp',
   saturation: 30,
   range: {
     x: [0, 2],
@@ -80,6 +97,24 @@ nodes.set(3, {
   parent: 1,
   children: [],
 })
+
+function scanNode(id, coordinate) {
+  const node = nodes.get(id)
+
+  if (
+    thru.contains(node.range.x, coordinate[0]) &
+    thru.contains(node.range.y, coordinate[1])
+  ) {
+    // coordinate is in range!
+    // give kids a chance to intercept
+    return node.children.reduce((p, c) => {
+      return scanNode(c, coordinate) || p
+    }, id)
+  }
+}
+
+const pxToX = px => thru.line([0, canvas.width], viewport[0], px)
+const pxToY = px => thru.line([0, canvas.height], viewport[1], px)
 
 function scrollHandler(e) {
   const amount = (thru.duration(viewport[0]) * 0.05 * e.deltaY) / 100
@@ -96,9 +131,46 @@ function scrollHandler(e) {
   update(...viewport)
 }
 
+let dragTarget = null
+let dragStart = null
+function downHandler(e) {
+  dragStart = [pxToX(e.clientX), pxToY(e.clientY)]
+  const targetNode = scanNode(rootId, dragStart)
+  if (targetNode !== undefined) {
+    dragTarget = {
+      type: 'node',
+      id: targetNode,
+      originalRange: { ...nodes.get(targetNode).range },
+    }
+    canvas.addEventListener('mousemove', moveHandler)
+    canvas.addEventListener('mouseup', clear)
+    document.addEventListener('blur', clear)
+  } else {
+    // put this back and just do nothing
+    dragStart = null
+  }
+}
+function moveHandler(e) {
+  const node = nodes.get(dragTarget.id)
+  const dragEnd = [pxToX(e.clientX), pxToY(e.clientY)]
+  const change = thru.sub(dragEnd, dragStart)
+  node.range.x = thru.add(dragTarget.originalRange.x, [change[0], change[0]])
+  node.range.y = thru.add(dragTarget.originalRange.y, [change[1], change[1]])
+  update(...viewport)
+  // console.log('movin', dragTarget)s
+}
+function clear(e) {
+  canvas.removeEventListener('mousemove', moveHandler)
+  canvas.removeEventListener('mouseup', clear)
+  document.removeEventListener('blur', clear)
+  dragStart = null
+  dragTarget = null
+}
+
 update(...viewport)
 
 canvas.addEventListener('mousewheel', scrollHandler)
+canvas.addEventListener('pointerdown', downHandler)
 
 // const { loop, xToPx, yToPx, xPxRange, yPxRange } = tools
 // ctx.fillStyle = `hsla(${hue}, 70%, 50%, 0.9)`
