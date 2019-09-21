@@ -14,11 +14,11 @@ const update = virtualRender({
       const node = nodes.get(id)
 
       if (
-        thru.containsRange(node.range.x, xRange) &&
-        thru.containsRange(node.range.y, yRange)
+        thru.containsRange(node.range[0], xRange) &&
+        thru.containsRange(node.range[1], yRange)
       ) {
-        const nodeXRange = node.range.x.map(xToPx)
-        const nodeYRange = node.range.y.map(yToPx)
+        const nodeXRange = node.range[0].map(xToPx)
+        const nodeYRange = node.range[1].map(yToPx)
         ctx.fillStyle = `hsla(${node.hue}, ${node.saturation}%, 50%, 0.8)`
         ctx.shadowColor = `hsla(${node.hue}, 20%, 30%, 0.5)`
         ctx.shadowOffsetY = 10
@@ -57,10 +57,7 @@ nodes.set(0, {
   name: 'root',
   hue: 50,
   saturation: 80,
-  range: {
-    x: [-5, 5],
-    y: [-5, 5],
-  },
+  range: [[-5, 5], [-5, 5]],
   parent: null,
   children: [1],
 })
@@ -68,33 +65,40 @@ nodes.set(1, {
   name: 'yellow',
   hue: 100,
   saturation: 60,
-  range: {
-    x: [-3, 3],
-    y: [-4, 3],
-  },
+  range: [[-3, 3], [-4, 3]],
   parent: 0,
   children: [2, 3],
 })
 
 nodes.set(2, {
   hue: 200,
-  saturation: 20,
-  range: {
-    x: [-2, -1],
-    y: [-3, 2],
-  },
+  saturation: 44,
+  range: [[-2, -1], [-3, 2]],
   parent: 1,
   children: [],
 })
 nodes.set(3, {
-  hue: 280,
+  hue: 260,
   name: 'purp',
-  saturation: 30,
-  range: {
-    x: [0, 2],
-    y: [-3, 0],
-  },
+  saturation: 40,
+  range: [[0, 2], [-3, 0]],
   parent: 1,
+  children: [4],
+})
+nodes.set(4, {
+  hue: 350,
+  name: 'little',
+  saturation: 35,
+  range: [[0.5, 1.5], [-2, -0.5]],
+  parent: 3,
+  children: [5],
+})
+nodes.set(5, {
+  hue: 40,
+  name: 'littler',
+  saturation: 30,
+  range: [[0.8, 1.2], [-1.7, -0.7]],
+  parent: 4,
   children: [],
 })
 
@@ -102,8 +106,8 @@ function scanNode(id, coordinate) {
   const node = nodes.get(id)
 
   if (
-    thru.contains(node.range.x, coordinate[0]) &
-    thru.contains(node.range.y, coordinate[1])
+    thru.contains(node.range[0], coordinate[0]) &
+    thru.contains(node.range[1], coordinate[1])
   ) {
     // coordinate is in range!
     // give kids a chance to intercept but fall back to this id:
@@ -144,7 +148,7 @@ function downHandler(e) {
     dragTarget = {
       type: 'node',
       id: targetNode,
-      originalRange: { ...nodes.get(targetNode).range },
+      originalRange: [...nodes.get(targetNode).range],
     }
   } else {
     dragTarget = {
@@ -160,8 +164,8 @@ function moveHandler(e) {
   const yChange = pxToY(change[1]) - pxToY(0)
   if (dragTarget.type === 'node') {
     const node = nodes.get(dragTarget.id)
-    node.range.x = thru.add(dragTarget.originalRange.x, [xChange, xChange])
-    node.range.y = thru.add(dragTarget.originalRange.y, [yChange, yChange])
+    node.range[0] = thru.add(dragTarget.originalRange[0], [xChange, xChange])
+    node.range[1] = thru.add(dragTarget.originalRange[1], [yChange, yChange])
     update(...viewport)
   } else if (dragTarget.type === 'pan') {
     viewport = [
