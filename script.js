@@ -78,12 +78,15 @@ const update = virtualRender({
           ctx.lineWidth = 4
           ctx.shadowOffsetY = 10
           ctx.shadowBlur = 40
-          ctx.strokeRect(
-            nodeXRange[0] - 2,
-            nodeYRange[0] - 2,
-            thru.duration(nodeXRange) + 4,
-            thru.duration(nodeYRange) + 4,
-          )
+
+          if (nodeNameWidth < nodeWidth) {
+            ctx.strokeRect(
+              nodeXRange[0] - 2,
+              nodeYRange[0] - 2,
+              thru.duration(nodeXRange) + 4,
+              thru.duration(nodeYRange) + 4,
+            )
+          }
 
           ctx.font = '50px Rajdhani'
           ctx.textBaseline = 'middle'
@@ -181,7 +184,6 @@ function scanNode(id, coordinate) {
     thru.contains(node.range[0], coordinate[0]) &
     thru.contains(node.range[1], coordinate[1])
   ) {
-    console.log(node)
     // children of collapsed nodes aren't visible so just return this id
     if (node.collapsed) return id
     // coordinate is in range!
@@ -196,7 +198,7 @@ const pxToX = px => thru.line([0, canvas.width], viewport[0], px)
 const pxToY = px => thru.line([0, canvas.height], viewport[1], px)
 
 function scrollHandler(e) {
-  const amount = (thru.duration(viewport[0]) * 0.05 * e.deltaY) / 100
+  const amount = (thru.duration(viewport[0]) * 0.1 * e.deltaY) / 100
   viewport[0] = thru.grow(
     amount,
     thru.from([0, canvas.width], e.clientX),
