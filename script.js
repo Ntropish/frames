@@ -12,34 +12,74 @@ const update = virtualRender({
     const { xy, xToPx, yToPx, xRange, yRange } = tools
     function drawNode(id) {
       const node = nodes.get(id)
-
+      const nodeXRange = node.range[0].map(xToPx)
+      const nodeYRange = node.range[1].map(yToPx)
+      // const parent = node.parent !== null ? nodes.get(node.parent) : null
+      // const parentFill = parent
+      //   ? `hsla(${parent.hue}, ${parent.saturation}%, 50%, 0.8)`
+      //   : 'black'
       if (
         thru.containsRange(node.range[0], xRange) &&
         thru.containsRange(node.range[1], yRange)
       ) {
-        const nodeXRange = node.range[0].map(xToPx)
-        const nodeYRange = node.range[1].map(yToPx)
-        ctx.fillStyle = `hsla(${node.hue}, ${node.saturation}%, 50%, 0.8)`
-        ctx.shadowColor = `hsla(${node.hue}, 20%, 30%, 0.5)`
-        ctx.shadowOffsetY = 10
-        ctx.shadowBlur = 40
-        ctx.fillRect(
-          nodeXRange[0],
-          nodeYRange[0],
-          thru.duration(nodeXRange),
-          thru.duration(nodeYRange),
-        )
-
+        // ctx.fillStyle = parentFill
         ctx.font = '50px Rajdhani'
-        ctx.textBaseline = 'bottom'
-        ctx.fillText(
-          node.name || '',
-          nodeXRange[0],
-          nodeYRange[0],
-          thru.duration(nodeXRange),
-        )
+        ctx.textBaseline = 'top'
+        const nodeNameWidth = ctx.measureText(node.name || '').width
+        const nodeWidth = thru.duration(nodeXRange)
 
-        node.children.forEach(drawNode)
+        const collapsed = nodeNameWidth + 4 > nodeWidth
+        node.collapsed = collapsed
+        if (!collapsed) {
+          ctx.fillStyle = `hsla(${node.hue}, ${node.saturation}%, 50%, 0.8)`
+          ctx.shadowColor = `hsla(${node.hue}, 20%, 30%, 0.5)`
+          ctx.shadowOffsetY = 10
+          ctx.shadowBlur = 40
+
+          ctx.fillText(
+            node.name || '',
+            nodeXRange[0],
+            nodeYRange[0],
+            thru.duration(nodeXRange),
+          )
+
+          ctx.beginPath(nodeXRange[0], nodeYRange[0] + 50)
+          ctx.lineTo(nodeXRange[0] + nodeNameWidth + 4, nodeYRange[0] + 50)
+          ctx.lineTo(nodeXRange[0] + nodeNameWidth + 4, nodeYRange[0])
+          ctx.lineTo(nodeXRange[1], nodeYRange[0])
+          ctx.lineTo(nodeXRange[1], nodeYRange[1])
+          ctx.lineTo(nodeXRange[0], nodeYRange[1])
+          ctx.lineTo(nodeXRange[0], nodeYRange[0] + 50)
+          ctx.closePath()
+          ctx.fill()
+
+          node.children.forEach(drawNode)
+        } else {
+          const nodeXRange = node.range[0].map(xToPx)
+          const nodeYRange = node.range[1].map(yToPx)
+          ctx.fillStyle = `hsla(${node.hue}, ${node.saturation}%, 50%, 0.8)`
+          ctx.strokeStyle = `hsla(${node.hue}, ${node.saturation}%, 50%, 0.8)`
+          ctx.lineWidth = 4
+          ctx.shadowColor = `hsla(${node.hue}, 20%, 30%, 0.5)`
+          ctx.shadowOffsetY = 10
+          ctx.shadowBlur = 40
+          ctx.strokeRect(
+            nodeXRange[0] - 4,
+            nodeYRange[0] - 4,
+            thru.duration(nodeXRange) + 8,
+            thru.duration(nodeYRange) + 8,
+          )
+
+          ctx.font = '50px Rajdhani'
+          ctx.textBaseline = 'middle'
+
+          ctx.fillText(
+            node.name || '',
+            nodeXRange[0],
+            nodeYRange[0] + thru.duration(nodeYRange) / 2,
+            thru.duration(nodeXRange),
+          )
+        }
       }
     }
     drawNode(rootId)
@@ -72,6 +112,7 @@ nodes.set(1, {
 
 nodes.set(2, {
   hue: 200,
+  name: 'blu',
   saturation: 44,
   range: [[-2, -1], [-3, 2]],
   parent: 1,
@@ -109,6 +150,9 @@ function scanNode(id, coordinate) {
     thru.contains(node.range[0], coordinate[0]) &
     thru.contains(node.range[1], coordinate[1])
   ) {
+    console.log(node)
+    // children of collapsed nodes aren't visible so just return this id
+    if (node.collapsed) return id
     // coordinate is in range!
     // give kids a chance to intercept but fall back to this id:
     return node.children.reduce((p, c) => {
