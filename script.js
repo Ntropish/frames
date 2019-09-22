@@ -226,11 +226,17 @@ function downHandler(e) {
       originalRanges[id] = deepCopy(node.range)
       node.children.forEach(storeFrameRange)
     }
+    const node = nodes.get(targetNode)
+    const parent = node.parent !== null ? nodes.get(node.parent) : null
     storeFrameRange(targetNode)
     dragTarget = {
       type: 'node',
       id: targetNode,
       originalRanges,
+      bounds: parent && [
+        thru.sub(parent.range[0], node.range[0]),
+        thru.sub(parent.range[1], node.range[1]),
+      ],
     }
   } else {
     dragTarget = {
@@ -242,19 +248,30 @@ function downHandler(e) {
 function moveHandler(e) {
   const dragEnd = [e.clientX, e.clientY]
   const change = thru.sub(dragEnd, dragStart)
-  const xChange = pxToX(change[0]) - pxToX(0)
-  const yChange = pxToY(change[1]) - pxToY(0)
+  let xChange = pxToX(change[0]) - pxToX(0)
+  let yChange = pxToY(change[1]) - pxToY(0)
+  if (dragTarget.bounds) {
+    xChange = thru.clamp(dragTarget.bounds[0], xChange)
+    yChange = thru.clamp(dragTarget.bounds[1], yChange)
+  }
   if (dragTarget.type === 'node') {
     function dragNode(id) {
       const node = nodes.get(id)
-      node.range[0] = thru.add(dragTarget.originalRanges[id][0], [
+      const xRange = thru.add(dragTarget.originalRanges[id][0], [
         xChange,
         xChange,
       ])
-      node.range[1] = thru.add(dragTarget.originalRanges[id][1], [
+      const yRange = thru.add(dragTarget.originalRanges[id][1], [
         yChange,
         yChange,
       ])
+      // if (node.parent !== null) {
+      //   node.range[0] = xRange.map(thru.clamp(nodes.get(node.parent).range[0]))
+      //   node.range[1] = yRange.map(thru.clamp(nodes.get(node.parent).range[1]))
+      // } else {
+      node.range[0] = xRange
+      node.range[1] = yRange
+      // }
       node.children.forEach(id => dragNode(id))
     }
     dragNode(dragTarget.id)
