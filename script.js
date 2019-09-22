@@ -20,10 +20,11 @@ const update = virtualRender({
       ) {
         ctx.font = '50px Rajdhani'
         ctx.textBaseline = 'top'
+        ctx.textAlign = 'left'
         const nodeNameWidth = ctx.measureText(node.name || '').width
         const nodeWidth = thru.duration(nodeXRange)
 
-        const collapsed = nodeNameWidth + 4 + 50 > nodeWidth
+        const collapsed = nodeNameWidth + 4 + 150 > nodeWidth
         node.collapsed = collapsed
         if (!collapsed) {
           ctx.fillStyle = `hsla(${node.hue}, ${node.saturation}%, 50%, 0.8)`
@@ -186,10 +187,17 @@ function downHandler(e) {
   canvas.addEventListener('mouseup', clear)
   document.addEventListener('blur', clear)
   if (targetNode !== undefined) {
+    const originalRanges = {}
+    function storeFrameRange(id) {
+      const node = nodes.get(id)
+      originalRanges[id] = deepCopy(node.range)
+      node.children.forEach(storeFrameRange)
+    }
+    storeFrameRange(targetNode)
     dragTarget = {
       type: 'node',
       id: targetNode,
-      originalRange: [...nodes.get(targetNode).range],
+      originalRanges,
     }
   } else {
     dragTarget = {
@@ -204,9 +212,19 @@ function moveHandler(e) {
   const xChange = pxToX(change[0]) - pxToX(0)
   const yChange = pxToY(change[1]) - pxToY(0)
   if (dragTarget.type === 'node') {
-    const node = nodes.get(dragTarget.id)
-    node.range[0] = thru.add(dragTarget.originalRange[0], [xChange, xChange])
-    node.range[1] = thru.add(dragTarget.originalRange[1], [yChange, yChange])
+    function dragNode(id) {
+      const node = nodes.get(id)
+      node.range[0] = thru.add(dragTarget.originalRanges[id][0], [
+        xChange,
+        xChange,
+      ])
+      node.range[1] = thru.add(dragTarget.originalRanges[id][1], [
+        yChange,
+        yChange,
+      ])
+      node.children.forEach(id => dragNode(id))
+    }
+    dragNode(dragTarget.id)
     update(...viewport)
   } else if (dragTarget.type === 'pan') {
     viewport = [
