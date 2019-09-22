@@ -10,6 +10,33 @@ canvas.height = canvas.scrollHeight
 const update = virtualRender({
   fn(ctx, tools) {
     const { xy, xToPx, yToPx, xRange, yRange } = tools
+
+    ctx.font = '50px Rajdhani'
+    ctx.textBaseline = 'middle'
+    ctx.textAlign = 'center'
+
+    const alphaRange = [0, 1]
+
+    // HELP MESSAGES
+    ctx.fillStyle = `hsla(0, 0%, 100%, ${thru.clamp(
+      alphaRange,
+      thru.line([40, 12], alphaRange, thru.duration(viewport[0])),
+    )})`
+    ctx.fillText(
+      'this is a virtual canvas that only updates 5 times a second',
+      xToPx(0),
+      yToPx(-6),
+    )
+
+    // This message needs the alpha multiplier because it is visible at start
+    ctx.fillStyle = `hsla(0, 0%, 100%, ${textAlpha() *
+      thru.clamp(
+        [1, 0],
+        thru.line([300, 50], [1, 0], thru.duration(viewport[0])),
+      )})`
+    ctx.fillText('scroll to zoom', xToPx(0), yToPx(-50))
+    // END HELP MESSAGES
+
     function drawNode(id) {
       const node = nodes.get(id)
       const nodeXRange = node.range[0].map(xToPx)
@@ -107,14 +134,26 @@ const update = virtualRender({
       }
     }
     drawNode(rootId)
+
+    // HELP MESSAGES
+    ctx.fillStyle = `hsla(0, 0%, 100%, ${thru.clamp(
+      alphaRange,
+      thru.line([20, 1], alphaRange, thru.duration(viewport[0])),
+    )})`
+    ctx.fillText(
+      'you can drag stuff -- it will feel weird',
+      xToPx(1),
+      yToPx(-2.3),
+    )
+    // END HELP MESSAGES
   },
   canvas,
 })
 
-let viewport = [[-6, 6], [-6, 6]]
+let viewport = [[-100, 100], [-100, 100]]
 
 let rootId = 0
-let nodeCount = 4
+// let nodeCount =
 let nodes = new Map()
 
 nodes.set(0, {
@@ -178,7 +217,7 @@ nodes.set(7, {
   hue: 180,
   name: 'bibby bobby',
   saturation: 26,
-  range: [[0.95, 1.05], [-1.4, -1]],
+  range: [[0.95, 1.05], [-1.35, -1.05]],
   parent: 6,
   children: [8],
 })
