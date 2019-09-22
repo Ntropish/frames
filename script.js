@@ -14,21 +14,16 @@ const update = virtualRender({
       const node = nodes.get(id)
       const nodeXRange = node.range[0].map(xToPx)
       const nodeYRange = node.range[1].map(yToPx)
-      // const parent = node.parent !== null ? nodes.get(node.parent) : null
-      // const parentFill = parent
-      //   ? `hsla(${parent.hue}, ${parent.saturation}%, 50%, 0.8)`
-      //   : 'black'
       if (
         thru.containsRange(node.range[0], xRange) &&
         thru.containsRange(node.range[1], yRange)
       ) {
-        // ctx.fillStyle = parentFill
         ctx.font = '50px Rajdhani'
         ctx.textBaseline = 'top'
         const nodeNameWidth = ctx.measureText(node.name || '').width
         const nodeWidth = thru.duration(nodeXRange)
 
-        const collapsed = nodeNameWidth + 4 > nodeWidth
+        const collapsed = nodeNameWidth + 4 + 50 > nodeWidth
         node.collapsed = collapsed
         if (!collapsed) {
           ctx.fillStyle = `hsla(${node.hue}, ${node.saturation}%, 50%, 0.8)`
@@ -55,6 +50,7 @@ const update = virtualRender({
 
           node.children.forEach(drawNode)
         } else {
+          // collapsed:
           const nodeXRange = node.range[0].map(xToPx)
           const nodeYRange = node.range[1].map(yToPx)
           ctx.fillStyle = `hsla(${node.hue}, ${node.saturation}%, 50%, 0.8)`
@@ -72,10 +68,11 @@ const update = virtualRender({
 
           ctx.font = '50px Rajdhani'
           ctx.textBaseline = 'middle'
+          ctx.textAlign = 'center'
 
           ctx.fillText(
             node.name || '',
-            nodeXRange[0],
+            nodeXRange[0] + thru.duration(nodeXRange) / 2,
             nodeYRange[0] + thru.duration(nodeYRange) / 2,
             thru.duration(nodeXRange),
           )
