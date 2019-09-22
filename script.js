@@ -155,6 +155,22 @@ nodes.set(5, {
   saturation: 30,
   range: [[0.8, 1.2], [-1.7, -0.7]],
   parent: 4,
+  children: [6],
+})
+nodes.set(6, {
+  hue: 290,
+  name: 'tiny babby',
+  saturation: 26,
+  range: [[0.9, 1.1], [-1.6, -0.8]],
+  parent: 5,
+  children: [7],
+})
+nodes.set(7, {
+  hue: 180,
+  name: 'bibby bobby',
+  saturation: 26,
+  range: [[0.95, 1.05], [-1.4, -1]],
+  parent: 6,
   children: [],
 })
 
@@ -249,13 +265,8 @@ function moveHandler(e) {
         yChange,
         yChange,
       ])
-      // if (node.parent !== null) {
-      //   node.range[0] = xRange.map(thru.clamp(nodes.get(node.parent).range[0]))
-      //   node.range[1] = yRange.map(thru.clamp(nodes.get(node.parent).range[1]))
-      // } else {
       node.range[0] = xRange
       node.range[1] = yRange
-      // }
       node.children.forEach(id => dragNode(id))
     }
     dragNode(dragTarget.id)
