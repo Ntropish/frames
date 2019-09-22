@@ -31,8 +31,8 @@ const update = virtualRender({
     // This message needs the alpha multiplier because it is visible at start
     ctx.fillStyle = `hsla(0, 0%, 100%, ${textAlpha() *
       thru.clamp(
-        [1, 0],
-        thru.line([300, 50], [1, 0], thru.duration(viewport[0])),
+        [0.7, 0],
+        thru.line([300, 50], [0.7, 0], thru.duration(viewport[0])),
       )})`
     ctx.fillText('scroll to zoom', xToPx(0), yToPx(-50))
     // END HELP MESSAGES
@@ -191,7 +191,7 @@ nodes.set(3, {
 })
 nodes.set(4, {
   hue: 350,
-  name: 'little',
+  name: 'small',
   saturation: 35,
   range: [[0.5, 1.5], [-2, -0.5]],
   parent: 3,
@@ -199,7 +199,7 @@ nodes.set(4, {
 })
 nodes.set(5, {
   hue: 40,
-  name: 'littler',
+  name: 'baby',
   saturation: 30,
   range: [[0.8, 1.2], [-1.7, -0.7]],
   parent: 4,
@@ -364,6 +364,12 @@ function clear(e) {
   dragTarget = null
 }
 
+function resize() {
+  canvas.width = canvas.scrollWidth
+  canvas.height = canvas.scrollHeight
+  update(...viewport)
+}
+
 // this is to fade the fonts in and hide the default font
 const start = Date.now()
 const textAlpha = () => {
@@ -379,5 +385,7 @@ for (let i = 0; i < 30; i++) {
 
 canvas.addEventListener('mousewheel', scrollHandler)
 canvas.addEventListener('pointerdown', downHandler)
+
+window.addEventListener('resize', resize)
 
 const deepCopy = obj => JSON.parse(JSON.stringify(obj))
