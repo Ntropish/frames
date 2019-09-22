@@ -41,13 +41,14 @@ const update = virtualRender({
           ]
         }
         if (!collapsed) {
-          const color = alpha =>
-            `hsla(${node.hue}, ${node.saturation}%, 50%, ${alpha || 0.8})`
-          ctx.fillStyle = color()
+          const color = (alpha = 0.8) =>
+            `hsla(${node.hue}, ${node.saturation}%, 50%, ${alpha})`
 
           ctx.shadowColor = `hsla(${node.hue}, 20%, 30%, 0.5)`
           ctx.shadowOffsetY = 10
           ctx.shadowBlur = 40
+
+          ctx.fillStyle = color(textAlpha())
 
           ctx.fillText(
             node.name || '',
@@ -55,6 +56,8 @@ const update = virtualRender({
             nodeYRange[0],
             thru.duration(nodeXRange),
           )
+
+          ctx.fillStyle = color()
 
           ctx.beginPath(nodeXRange[0], nodeYRange[0] + 50)
           ctx.lineTo(nodeXRange[0] + nodeNameWidth + 4, nodeYRange[0] + 50)
@@ -87,6 +90,9 @@ const update = virtualRender({
               thru.duration(nodeYRange) + 4,
             )
           }
+
+          const alpha = textAlpha()
+          ctx.fillStyle = color(alpha)
 
           ctx.font = '50px Rajdhani'
           ctx.textBaseline = 'middle'
@@ -174,6 +180,22 @@ nodes.set(7, {
   saturation: 26,
   range: [[0.95, 1.05], [-1.4, -1]],
   parent: 6,
+  children: [8],
+})
+nodes.set(8, {
+  hue: 260,
+  name: 'beep boop',
+  saturation: 26,
+  range: [[0.99, 1.01], [-1.22, -1.19]],
+  parent: 7,
+  children: [9],
+})
+nodes.set(9, {
+  hue: 70,
+  name: 'knick knacks',
+  saturation: 26,
+  range: [[0.991, 0.999], [-1.197, -1.192]],
+  parent: 7,
   children: [],
 })
 
@@ -273,12 +295,18 @@ function moveHandler(e) {
     }
     dragNode(dragTarget.id)
     update(...viewport)
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => update(...viewport), i * 300)
+    }
   } else if (dragTarget.type === 'pan') {
     viewport = [
       thru.sub(dragTarget.originalViewport[0], [xChange, xChange]),
       thru.sub(dragTarget.originalViewport[1], [yChange, yChange]),
     ]
     update(...viewport)
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => update(...viewport), i * 300)
+    }
   }
 }
 function clear(e) {
@@ -289,7 +317,18 @@ function clear(e) {
   dragTarget = null
 }
 
+// this is to fade the fonts in and hide the default font
+const start = Date.now()
+const textAlpha = () => {
+  // this makes a linear fade in for 500ms
+  const alpha = thru.from([start, start + 500], Date.now())
+  return thru.clamp([0, 1], alpha)
+}
+// initial updates for when the fonts load
 update(...viewport)
+for (let i = 0; i < 30; i++) {
+  setTimeout(() => update(...viewport), i * 30)
+}
 
 canvas.addEventListener('mousewheel', scrollHandler)
 canvas.addEventListener('pointerdown', downHandler)
