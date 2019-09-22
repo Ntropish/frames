@@ -14,6 +14,7 @@ const update = virtualRender({
       const node = nodes.get(id)
       const nodeXRange = node.range[0].map(xToPx)
       const nodeYRange = node.range[1].map(yToPx)
+
       if (
         thru.containsRange(node.range[0], xRange) &&
         thru.containsRange(node.range[1], yRange)
@@ -26,8 +27,40 @@ const update = virtualRender({
 
         const collapsed = nodeNameWidth + 4 + 150 > nodeWidth
         node.collapsed = collapsed
+
+        const parent = node.parent !== null ? nodes.get(node.parent) : null
+        const parentNameWidth = parent
+          ? ctx.measureText(parent.name || '').width
+          : 0
+
+        let parentTitleCoordinate
+        if (parent) {
+          parentTitleCoordinate = [
+            xToPx(parent.range[0][0]),
+            yToPx(parent.range[1][0]),
+          ]
+        }
         if (!collapsed) {
-          ctx.fillStyle = `hsla(${node.hue}, ${node.saturation}%, 50%, 0.8)`
+          const color = alpha =>
+            `hsla(${node.hue}, ${node.saturation}%, 50%, ${alpha || 0.8})`
+          if (parentTitleCoordinate) {
+            var grd = ctx.createRadialGradient(
+              parentTitleCoordinate[0],
+              parentTitleCoordinate[1],
+              parentNameWidth,
+              parentTitleCoordinate[0],
+              parentTitleCoordinate[1],
+              parentNameWidth + 50,
+            )
+            grd.addColorStop(0, 'transparent')
+            grd.addColorStop(0.7, color(0.15))
+            grd.addColorStop(0.9, color(0.6))
+            grd.addColorStop(1, color())
+            ctx.fillStyle = grd
+          } else {
+            ctx.fillStyle = color()
+          }
+
           ctx.shadowColor = `hsla(${node.hue}, 20%, 30%, 0.5)`
           ctx.shadowOffsetY = 10
           ctx.shadowBlur = 40
@@ -248,20 +281,3 @@ canvas.addEventListener('mousewheel', scrollHandler)
 canvas.addEventListener('pointerdown', downHandler)
 
 const deepCopy = obj => JSON.parse(JSON.stringify(obj))
-
-// const { loop, xToPx, yToPx, xPxRange, yPxRange } = tools
-// ctx.fillStyle = `hsla(${hue}, 70%, 50%, 0.9)`
-// const width = thru.duration(xPxRange)
-// const height = thru.duration(yPxRange)
-// ctx.fillRect(0, 0, width, height)
-// ctx.lineWidth = 10
-// ctx.strokeStyle = 'hsla(0, 0%, 100%, 0.4)'
-// loop([[-1, 0], [10, 11], [21, 0], [10, -11], [-1, 0]])
-// loop([[0, 0], [10, 10], [20, 0], [10, -10], [0, 0]])
-// loop([[2, 0], [10, 8], [18, 0], [10, -8], [2, 0]])
-// ctx.fillStyle = `hsla(220, 30%, 70%, 0.7)`
-// ctx.fillRect(0, 0, width, height)
-// ctx.fillStyle = `hsla(0, 0%, 100%, 0.9)`
-// ctx.beginPath()
-// ctx.arc(xToPx(ballX), yToPx(0), 10, 0, 2 * Math.PI, false)
-// ctx.fill()
