@@ -388,4 +388,6 @@ canvas.addEventListener('pointerdown', downHandler)
 
 window.addEventListener('resize', resize)
 
+resize()
+
 const deepCopy = obj => JSON.parse(JSON.stringify(obj))
