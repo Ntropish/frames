@@ -43,23 +43,7 @@ const update = virtualRender({
         if (!collapsed) {
           const color = alpha =>
             `hsla(${node.hue}, ${node.saturation}%, 50%, ${alpha || 0.8})`
-          if (parentTitleCoordinate) {
-            var grd = ctx.createRadialGradient(
-              parentTitleCoordinate[0],
-              parentTitleCoordinate[1],
-              parentNameWidth,
-              parentTitleCoordinate[0],
-              parentTitleCoordinate[1],
-              parentNameWidth + 50,
-            )
-            grd.addColorStop(0, 'transparent')
-            grd.addColorStop(0.7, color(0.15))
-            grd.addColorStop(0.9, color(0.6))
-            grd.addColorStop(1, color())
-            ctx.fillStyle = grd
-          } else {
-            ctx.fillStyle = color()
-          }
+          ctx.fillStyle = color()
 
           ctx.shadowColor = `hsla(${node.hue}, 20%, 30%, 0.5)`
           ctx.shadowOffsetY = 10
@@ -87,35 +71,18 @@ const update = virtualRender({
           // collapsed:
           const color = alpha =>
             `hsla(${node.hue}, ${node.saturation}%, 50%, ${alpha || 0.8})`
-          if (parentTitleCoordinate) {
-            var grd = ctx.createRadialGradient(
-              parentTitleCoordinate[0],
-              parentTitleCoordinate[1],
-              parentNameWidth,
-              parentTitleCoordinate[0],
-              parentTitleCoordinate[1],
-              parentNameWidth + 50,
-            )
-            grd.addColorStop(0, 'transparent')
-            grd.addColorStop(0.7, color(0.15))
-            grd.addColorStop(0.9, color(0.6))
-            grd.addColorStop(1, color())
-            ctx.fillStyle = grd
-            ctx.strokeStyle = grd
-          } else {
-            ctx.fillStyle = color()
-            ctx.strokeStyle = grd
-          }
+          ctx.fillStyle = color()
+          ctx.strokeStyle = color()
           const nodeXRange = node.range[0].map(xToPx)
           const nodeYRange = node.range[1].map(yToPx)
           ctx.lineWidth = 4
           ctx.shadowOffsetY = 10
           ctx.shadowBlur = 40
           ctx.strokeRect(
-            nodeXRange[0] - 4,
-            nodeYRange[0] - 4,
-            thru.duration(nodeXRange) + 8,
-            thru.duration(nodeYRange) + 8,
+            nodeXRange[0] - 2,
+            nodeYRange[0] - 2,
+            thru.duration(nodeXRange) + 4,
+            thru.duration(nodeYRange) + 4,
           )
 
           ctx.font = '50px Rajdhani'
