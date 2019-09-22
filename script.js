@@ -188,14 +188,22 @@ nodes.set(8, {
   saturation: 26,
   range: [[0.99, 1.01], [-1.22, -1.19]],
   parent: 7,
-  children: [9],
+  children: [9, 10],
 })
 nodes.set(9, {
   hue: 70,
   name: 'knick knacks',
   saturation: 26,
   range: [[0.991, 0.999], [-1.197, -1.192]],
-  parent: 7,
+  parent: 8,
+  children: [],
+})
+nodes.set(10, {
+  hue: 0,
+  name: 'doodads',
+  saturation: 22,
+  range: [[0.997, 1.009], [-1.209, -1.199]],
+  parent: 8,
   children: [],
 })
 
