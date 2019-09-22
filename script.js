@@ -85,12 +85,30 @@ const update = virtualRender({
           node.children.forEach(drawNode)
         } else {
           // collapsed:
+          const color = alpha =>
+            `hsla(${node.hue}, ${node.saturation}%, 50%, ${alpha || 0.8})`
+          if (parentTitleCoordinate) {
+            var grd = ctx.createRadialGradient(
+              parentTitleCoordinate[0],
+              parentTitleCoordinate[1],
+              parentNameWidth,
+              parentTitleCoordinate[0],
+              parentTitleCoordinate[1],
+              parentNameWidth + 50,
+            )
+            grd.addColorStop(0, 'transparent')
+            grd.addColorStop(0.7, color(0.15))
+            grd.addColorStop(0.9, color(0.6))
+            grd.addColorStop(1, color())
+            ctx.fillStyle = grd
+            ctx.strokeStyle = grd
+          } else {
+            ctx.fillStyle = color()
+            ctx.strokeStyle = grd
+          }
           const nodeXRange = node.range[0].map(xToPx)
           const nodeYRange = node.range[1].map(yToPx)
-          ctx.fillStyle = `hsla(${node.hue}, ${node.saturation}%, 50%, 0.8)`
-          ctx.strokeStyle = `hsla(${node.hue}, ${node.saturation}%, 50%, 0.8)`
           ctx.lineWidth = 4
-          ctx.shadowColor = `hsla(${node.hue}, 20%, 30%, 0.5)`
           ctx.shadowOffsetY = 10
           ctx.shadowBlur = 40
           ctx.strokeRect(
@@ -108,7 +126,6 @@ const update = virtualRender({
             node.name || '',
             nodeXRange[0] + thru.duration(nodeXRange) / 2,
             nodeYRange[0] + thru.duration(nodeYRange) / 2,
-            thru.duration(nodeXRange),
           )
         }
       }
